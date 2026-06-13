@@ -1,13 +1,7 @@
 import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
+import type { SlideProps } from "../types";
 
-/**
- * Example slide: title card with a simple fade/slide-in animation.
- *
- * Each slide is a self-contained component. Use Remotion hooks like
- * useCurrentFrame() to drive per-frame animation — this works both in the
- * live <Player> preview and in a real render.
- */
-export const TitleSlide = () => {
+export const TitleSlide = (_props: SlideProps) => {
   const frame = useCurrentFrame();
 
   const opacity = interpolate(frame, [0, 20], [0, 1], {
@@ -33,11 +27,16 @@ export const TitleSlide = () => {
           textAlign: "center",
         }}
       >
-        <h1 style={{ fontSize: 96, fontWeight: 800, margin: 0 }}>
-          Lecture Title
+        <p style={{ fontSize: 28, color: "#818cf8", marginBottom: 16, letterSpacing: 4, textTransform: "uppercase" }}>
+          Webinar
+        </p>
+        <h1 style={{ fontSize: 88, fontWeight: 800, margin: 0, lineHeight: 1.1 }}>
+          AI-Assisted
+          <br />
+          Software Development
         </h1>
-        <p style={{ fontSize: 36, marginTop: 24, color: "#a5b4fc" }}>
-          Subtitle / Instructor name / Date
+        <p style={{ fontSize: 36, marginTop: 32, color: "#a5b4fc" }}>
+          A new mindset for a new era
         </p>
       </div>
     </AbsoluteFill>

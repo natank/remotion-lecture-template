@@ -34,7 +34,8 @@ const slideIndexForFrame = (frame: number): number => {
  * navigation, a slide menu, transport controls, and URL-param-based
  * deep-linking (?slide=N).
  *
- * This is the main component you mount in your app — see App.tsx.
+ * Arrow keys step through per-slide animations first; only when past the
+ * last (or before the first) step do they advance to the next/prev slide.
  */
 export const LecturePlayer = () => {
   const playerRef = useRef<PlayerRef>(null);
@@ -45,6 +46,7 @@ export const LecturePlayer = () => {
   const [currentSlideIndex, setCurrentSlideIndex] =
     useState(initialSlideIndex);
   const [playing, setPlaying] = useState(false);
+  const [step, setStep] = useState(0);
 
   // Seek to the initial slide (from ?slide=N) once the player is ready.
   useEffect(() => {
@@ -65,7 +67,13 @@ export const LecturePlayer = () => {
     const onFrameUpdate = () => {
       const frame = player.getCurrentFrame();
       const index = slideIndexForFrame(frame);
-      setCurrentSlideIndex((prev) => (prev !== index ? index : prev));
+      setCurrentSlideIndex((prev) => {
+        if (prev !== index) {
+          setStep(0);
+          return index;
+        }
+        return prev;
+      });
     };
 
     player.addEventListener("frameupdate", onFrameUpdate);
@@ -90,15 +98,42 @@ export const LecturePlayer = () => {
     const startFrame = slideStartFrames[clamped] ?? 0;
     player.seekTo(startFrame);
     setCurrentSlideIndex(clamped);
+    setStep(0);
   }, []);
 
-  const goToNextSlide = useCallback(() => {
-    goToSlide(currentSlideIndex + 1);
-  }, [currentSlideIndex, goToSlide]);
+  /** Advance one animation step, or move to the next slide if at the last step. */
+  const stepForward = useCallback(() => {
+    const slideStepCount = SLIDES[currentSlideIndex]?.stepCount ?? 0;
+    if (slideStepCount === 0 || step >= slideStepCount - 1) {
+      // No more steps — go to next slide if possible
+      if (currentSlideIndex < SLIDES.length - 1) {
+        goToSlide(currentSlideIndex + 1);
+      }
+      // Already on last slide at last step: do nothing
+    } else {
+      setStep((s) => s + 1);
+    }
+  }, [currentSlideIndex, step, goToSlide]);
 
-  const goToPrevSlide = useCallback(() => {
-    goToSlide(currentSlideIndex - 1);
-  }, [currentSlideIndex, goToSlide]);
+  /** Go back one animation step, or move to the previous slide if at step 0. */
+  const stepBack = useCallback(() => {
+    if (step > 0) {
+      setStep((s) => s - 1);
+    } else {
+      // At first step — go to previous slide if possible
+      if (currentSlideIndex > 0) {
+        const prevIndex = currentSlideIndex - 1;
+        const prevStepCount = SLIDES[prevIndex]?.stepCount ?? 0;
+        const player = playerRef.current;
+        if (!player) return;
+        player.seekTo(slideStartFrames[prevIndex] ?? 0);
+        setCurrentSlideIndex(prevIndex);
+        // Land on the last step of the previous slide
+        setStep(prevStepCount > 0 ? prevStepCount - 1 : 0);
+      }
+      // Already on first slide at step 0: do nothing
+    }
+  }, [currentSlideIndex, step]);
 
   const togglePlay = useCallback(() => {
     const player = playerRef.current;
@@ -106,8 +141,6 @@ export const LecturePlayer = () => {
     if (player.isPlaying()) {
       player.pause();
     } else {
-      // If we're at the very end, restart from the beginning of the current
-      // slide for a nicer "replay" experience.
       if (player.getCurrentFrame() >= totalDuration - 1) {
         player.seekTo(slideStartFrames[currentSlideIndex] ?? 0);
       }
@@ -115,8 +148,7 @@ export const LecturePlayer = () => {
     }
   }, [currentSlideIndex]);
 
-  // Keyboard navigation: ArrowRight/ArrowLeft change slides, Space
-  // play/pauses. Ignored while typing in an input/textarea.
+  // Keyboard navigation: ArrowRight advances steps/slides, ArrowLeft goes back.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -126,11 +158,11 @@ export const LecturePlayer = () => {
       switch (e.key) {
         case "ArrowRight":
           e.preventDefault();
-          goToNextSlide();
+          stepForward();
           break;
         case "ArrowLeft":
           e.preventDefault();
-          goToPrevSlide();
+          stepBack();
           break;
         case " ":
           e.preventDefault();
@@ -143,7 +175,7 @@ export const LecturePlayer = () => {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [goToNextSlide, goToPrevSlide, togglePlay]);
+  }, [stepForward, stepBack, togglePlay]);
 
   const currentSlide = SLIDES[currentSlideIndex];
 
@@ -161,6 +193,7 @@ export const LecturePlayer = () => {
             <Player
               ref={playerRef}
               component={LectureComposition}
+              inputProps={{ currentSlideIndex, step }}
               durationInFrames={totalDuration}
               fps={LECTURE_FPS}
               compositionWidth={LECTURE_WIDTH}
@@ -178,8 +211,8 @@ export const LecturePlayer = () => {
         <PlayerControls
           playing={playing}
           onTogglePlay={togglePlay}
-          onPrev={goToPrevSlide}
-          onNext={goToNextSlide}
+          onPrev={stepBack}
+          onNext={stepForward}
           currentSlideIndex={currentSlideIndex}
           totalSlides={SLIDES.length}
           currentSlideTitle={currentSlide?.title ?? ""}

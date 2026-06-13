@@ -14,7 +14,22 @@ export interface SlideDefinition {
   /** Length of this slide in frames at LECTURE_FPS. */
   durationInFrames: number;
   /** The React component that renders this slide's content. */
-  component: ComponentType<Record<string, unknown>>;
+  component: ComponentType<SlideProps>;
   /** Optional props passed to the slide component. */
   props?: Record<string, unknown>;
+  /**
+   * Number of click-through animation steps this slide has.
+   * 0 means no step-based animations (slide appears all at once).
+   */
+  stepCount?: number;
+}
+
+/** Props injected into every slide component by LectureComposition. */
+export interface SlideProps {
+  /**
+   * Which animation step is currently active (0-based).
+   * Steps are advanced one at a time with ArrowRight / click.
+   */
+  step: number;
+  [key: string]: unknown;
 }

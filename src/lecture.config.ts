@@ -1,24 +1,10 @@
 import type { SlideDefinition } from "./types";
 import { TitleSlide } from "./slides/01-Title";
 import { AgendaSlide } from "./slides/02-Agenda";
-import { ConceptSlide } from "./slides/03-Concept";
-import { ClosingSlide } from "./slides/04-Closing";
-
-/**
- * ============================================================
- *  LECTURE CONFIG
- * ============================================================
- *
- * This is the single place you edit to build a lecture:
- *
- *  1. Create a new component in src/slides/ (copy an existing one).
- *  2. Import it above.
- *  3. Add an entry to SLIDES below with a unique `id`, a `title`
- *     (shown in the slide menu), and `durationInFrames` (at LECTURE_FPS).
- *
- * Reordering this array reorders the lecture. Removing an entry removes
- * the slide from playback. Nothing else needs to change.
- */
+import { MindsetSlide } from "./slides/03-Mindset";
+import { SDLCSlide } from "./slides/04-SDLC";
+import { DemoSlide } from "./slides/05-Demo";
+import { ClosingSlide } from "./slides/06-Closing";
 
 /** Frames per second for the whole lecture. */
 export const LECTURE_FPS = 30;
@@ -31,26 +17,44 @@ export const SLIDES: SlideDefinition[] = [
   {
     id: "title",
     title: "Title",
-    durationInFrames: 90, // 3s
+    durationInFrames: 120, // 4s
     component: TitleSlide,
+    stepCount: 0,
   },
   {
     id: "agenda",
     title: "Agenda",
-    durationInFrames: 150, // 5s
+    durationInFrames: 180, // 6s
     component: AgendaSlide,
+    stepCount: 4, // 4 agenda items
   },
   {
-    id: "concept",
-    title: "Core Concept",
-    durationInFrames: 240, // 8s
-    component: ConceptSlide,
+    id: "mindset",
+    title: "A New Mindset",
+    durationInFrames: 300, // 10s
+    component: MindsetSlide,
+    stepCount: 3, // intro text + 2 mindset blocks
+  },
+  {
+    id: "sdlc",
+    title: "The SDLC",
+    durationInFrames: 270, // 9s
+    component: SDLCSlide,
+    stepCount: 9, // 9 SDLC phases
+  },
+  {
+    id: "demo",
+    title: "Live Demo",
+    durationInFrames: 150, // 5s
+    component: DemoSlide,
+    stepCount: 0,
   },
   {
     id: "closing",
-    title: "Closing",
-    durationInFrames: 90, // 3s
+    title: "Key Takeaways",
+    durationInFrames: 210, // 7s
     component: ClosingSlide,
+    stepCount: 6, // header + 5 takeaways
   },
 ];
 

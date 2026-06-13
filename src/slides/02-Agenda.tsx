@@ -1,46 +1,41 @@
-import { useCurrentFrame, interpolate } from "remotion";
 import { SlideLayout } from "../components/SlideLayout";
+import type { SlideProps } from "../types";
 
 const AGENDA_ITEMS = [
-  "Introduction & motivation",
-  "Core concepts",
-  "Live demo",
-  "Q&A and wrap-up",
+  "The new reality for developers",
+  "A new mindset: Engineer & Project Manager",
+  "The Software Development Life Cycle (SDLC)",
+  "Live demo: building with AI",
 ];
 
-/**
- * Example slide: agenda list with items staggering in one at a time.
- */
-export const AgendaSlide = () => {
-  const frame = useCurrentFrame();
-
+export const AgendaSlide = ({ step }: SlideProps) => {
   return (
     <SlideLayout title="Agenda">
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
         {AGENDA_ITEMS.map((item, i) => {
-          const delay = i * 10;
-          const opacity = interpolate(frame, [delay, delay + 15], [0, 1], {
-            extrapolateRight: "clamp",
-            extrapolateLeft: "clamp",
-          });
-          const translateX = interpolate(
-            frame,
-            [delay, delay + 15],
-            [-30, 0],
-            { extrapolateRight: "clamp", extrapolateLeft: "clamp" },
-          );
-
+          const visible = i <= step;
           return (
             <li
               key={item}
               style={{
-                opacity,
-                transform: `translateX(${translateX}px)`,
-                padding: "16px 0",
+                opacity: visible ? 1 : 0,
+                transform: visible ? "translateX(0)" : "translateX(-30px)",
+                transition: "opacity 0.35s ease, transform 0.35s ease",
+                padding: "18px 0",
                 borderBottom: "1px solid rgba(255,255,255,0.1)",
+                display: "flex",
+                alignItems: "center",
+                gap: 20,
               }}
             >
-              <span style={{ color: "#818cf8", marginRight: 16 }}>
+              <span
+                style={{
+                  color: "#818cf8",
+                  fontWeight: 700,
+                  fontSize: 28,
+                  minWidth: 40,
+                }}
+              >
                 {String(i + 1).padStart(2, "0")}
               </span>
               {item}
